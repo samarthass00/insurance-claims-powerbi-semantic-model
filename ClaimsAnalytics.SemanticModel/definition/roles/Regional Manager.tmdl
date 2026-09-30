@@ -1,0 +1,8 @@
+/// Dynamic row-level security: a signed-in user sees only the regions mapped to their UPN in 'User Region'.
+/// Filters flow Region -> Policy -> Claim / Earned Premium through single-direction relationships.
+role 'Regional Manager'
+	modelPermission: read
+
+	tablePermission Region = 'Region'[Region Key] IN CALCULATETABLE ( VALUES ( 'User Region'[Region Key] ), 'User Region'[User Email] = USERPRINCIPALNAME () )
+
+	tablePermission 'User Region' = 'User Region'[User Email] = USERPRINCIPALNAME ()

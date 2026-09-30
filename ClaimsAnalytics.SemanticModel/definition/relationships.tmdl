@@ -1,0 +1,35 @@
+relationship 'Earned Premium to Policy'
+	fromColumn: 'Earned Premium'.'Policy ID'
+	toColumn: Policy.'Policy ID'
+
+relationship 'Earned Premium to Date'
+	fromColumn: 'Earned Premium'.'Earned Month'
+	toColumn: 'Date'.Date
+
+relationship 'Claim to Policy'
+	fromColumn: Claim.'Policy ID'
+	toColumn: Policy.'Policy ID'
+
+relationship 'Claim Loss Date to Date'
+	fromColumn: Claim.'Loss Date'
+	toColumn: 'Date'.Date
+
+/// Inactive: activated with USERELATIONSHIP in [Claims Reported].
+relationship 'Claim Report Date to Date'
+	isActive: false
+	fromColumn: Claim.'Report Date'
+	toColumn: 'Date'.Date
+
+/// Inactive: activated with USERELATIONSHIP in [Written Premium].
+relationship 'Policy Effective Date to Date'
+	isActive: false
+	fromColumn: Policy.'Effective Date'
+	toColumn: 'Date'.Date
+
+relationship 'Policy to Line of Business'
+	fromColumn: Policy.'LOB Key'
+	toColumn: 'Line of Business'.'LOB Key'
+
+relationship 'Policy to Region'
+	fromColumn: Policy.'Region Key'
+	toColumn: Region.'Region Key'

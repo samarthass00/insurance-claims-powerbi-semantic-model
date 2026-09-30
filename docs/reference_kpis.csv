@@ -1,0 +1,6 @@
+lob_key,line_of_business,earned_premium,incurred_loss,claim_count,loss_ratio,target_loss_ratio
+LOB01,Commercial Auto,18157068.6,13652661.15,332.0,0.75,0.62
+LOB02,General Liability,18088071.0,10620170.12,327.0,0.59,0.55
+LOB03,Workers Compensation,11344579.92,9256066.73,222.0,0.82,0.68
+LOB04,Commercial Property,11469020.28,6344418.61,206.0,0.55,0.48
+ALL,Total,59058739.8,39873316.61,1087.0,0.68,

@@ -1,0 +1,43 @@
+table 'Earned Premium'
+
+	/// Premium earned in the period (monthly pro-rata).
+	measure 'Earned Premium Amount' = SUM ( 'Earned Premium'[Earned Premium] )
+		formatString: \$#,0
+
+	/// Earned premium for the same period last year.
+	measure 'Earned Premium PY' = CALCULATE ( [Earned Premium Amount], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+		formatString: \$#,0
+
+	/// Year-over-year change in earned premium.
+	measure 'Earned Premium YoY %' = DIVIDE ( [Earned Premium Amount] - [Earned Premium PY], [Earned Premium PY] )
+		formatString: 0.0%
+
+	column 'Policy ID'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: policy_id
+
+	column 'Earned Month'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		isHidden
+		summarizeBy: none
+		sourceColumn: earned_month
+
+	column 'Earned Premium'
+		dataType: decimal
+		formatString: \$#,0.00
+		isHidden
+		summarizeBy: none
+		sourceColumn: earned_premium
+
+	partition 'Earned Premium' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fact_earned_premium.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"policy_id", type text}, {"earned_month", type date}, {"earned_premium", Currency.Type}}, "en-US")
+				in
+				    Typed

@@ -1,0 +1,64 @@
+table Policy
+
+	/// Number of policies in filter context.
+	measure 'Policy Count' = COUNTROWS ( Policy )
+		formatString: #,0
+
+	/// Premium written on policies effective in the period.
+	measure 'Written Premium' = CALCULATE ( SUM ( Policy[Written Premium] ), USERELATIONSHIP ( Policy[Effective Date], 'Date'[Date] ) )
+		formatString: \$#,0
+
+	/// Share of policies that are renewals.
+	measure 'Renewal Share %' = DIVIDE ( CALCULATE ( [Policy Count], Policy[Is Renewal] = TRUE () ), [Policy Count] )
+		formatString: 0.0%
+
+	column 'Policy ID'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: policy_id
+
+	column 'LOB Key'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: lob_key
+
+	column 'Region Key'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: region_key
+
+	column 'Effective Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: effective_date
+
+	column 'Expiration Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: expiration_date
+
+	column 'Written Premium'
+		dataType: decimal
+		formatString: \$#,0.00
+		isHidden
+		summarizeBy: none
+		sourceColumn: written_premium
+
+	column 'Is Renewal'
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: is_renewal
+
+	partition Policy = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\dim_policy.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"policy_id", type text}, {"lob_key", type text}, {"region_key", type text}, {"effective_date", type date}, {"expiration_date", type date}, {"written_premium", Currency.Type}, {"is_renewal", type logical}}, "en-US")
+				in
+				    Typed

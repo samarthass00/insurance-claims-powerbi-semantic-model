@@ -1,0 +1,3 @@
+/// Folder that holds the synthetic CSVs produced by src/generate_data.py.
+/// Change this parameter in Power BI Desktop (Transform data > Edit parameters) after cloning.
+expression DataFolder = "C:\\portfolio\\insurance-claims-powerbi-semantic-model\\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]

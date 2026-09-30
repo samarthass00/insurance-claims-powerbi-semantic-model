@@ -1,0 +1,5 @@
+lob_key,line_of_business,target_loss_ratio
+LOB01,Commercial Auto,0.62
+LOB02,General Liability,0.55
+LOB03,Workers Compensation,0.68
+LOB04,Commercial Property,0.48

@@ -1,0 +1,107 @@
+table Claim
+
+	/// Claims by loss date.
+	measure 'Claim Count' = COUNTROWS ( Claim )
+		formatString: #,0
+
+	/// Claims by report date (inactive relationship).
+	measure 'Claims Reported' = CALCULATE ( [Claim Count], USERELATIONSHIP ( Claim[Report Date], 'Date'[Date] ) )
+		formatString: #,0
+
+	/// Claims not yet closed.
+	measure 'Open Claims' = CALCULATE ( [Claim Count], Claim[Claim Status] = "Open" )
+		formatString: #,0
+
+	/// Loss payments to date.
+	measure 'Paid Loss' = SUM ( Claim[Paid Amount] )
+		formatString: \$#,0
+
+	/// Outstanding case reserves.
+	measure 'Case Reserve Amount' = SUM ( Claim[Case Reserve] )
+		formatString: \$#,0
+
+	/// Paid loss plus case reserves.
+	measure 'Incurred Loss' = [Paid Loss] + [Case Reserve Amount]
+		formatString: \$#,0
+
+	/// Incurred loss / earned premium (calendar-period view, synthetic data).
+	measure 'Loss Ratio' = DIVIDE ( [Incurred Loss], [Earned Premium Amount] )
+		formatString: 0.0%
+
+	/// Gap to target; meaningful when one line of business is in context.
+	measure 'Loss Ratio vs Target' = [Loss Ratio] - MAX ( 'Line of Business'[Target Loss Ratio] )
+		formatString: +0.0%;-0.0%
+
+	/// Incurred loss per claim.
+	measure 'Average Severity' = DIVIDE ( [Incurred Loss], [Claim Count] )
+		formatString: \$#,0
+
+	/// Claims per 100 policies in context.
+	measure 'Claim Frequency per 100 Policies' = DIVIDE ( [Claim Count], [Policy Count] ) * 100
+		formatString: 0.00
+
+	/// Days from loss to first report.
+	measure 'Avg Report Lag Days' = AVERAGEX ( Claim, DATEDIFF ( Claim[Loss Date], Claim[Report Date], DAY ) )
+		formatString: 0.0
+
+	/// Cycle time for closed claims.
+	measure 'Avg Days to Close' = AVERAGEX ( FILTER ( Claim, NOT ISBLANK ( Claim[Close Date] ) ), DATEDIFF ( Claim[Report Date], Claim[Close Date], DAY ) )
+		formatString: 0.0
+
+	column 'Claim ID'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: claim_id
+
+	column 'Policy ID'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: policy_id
+
+	column 'Loss Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: loss_date
+
+	column 'Report Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: report_date
+
+	column 'Close Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: close_date
+
+	column 'Claim Status'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: claim_status
+
+	column 'Paid Amount'
+		dataType: decimal
+		formatString: \$#,0.00
+		isHidden
+		summarizeBy: none
+		sourceColumn: paid_amount
+
+	column 'Case Reserve'
+		dataType: decimal
+		formatString: \$#,0.00
+		isHidden
+		summarizeBy: none
+		sourceColumn: case_reserve
+
+	partition Claim = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fact_claim.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"claim_id", type text}, {"policy_id", type text}, {"loss_date", type date}, {"report_date", type date}, {"close_date", type date}, {"claim_status", type text}, {"paid_amount", Currency.Type}, {"case_reserve", Currency.Type}}, "en-US")
+				in
+				    Typed

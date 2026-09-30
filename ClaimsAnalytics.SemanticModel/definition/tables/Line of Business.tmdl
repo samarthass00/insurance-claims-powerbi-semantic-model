@@ -1,0 +1,28 @@
+table 'Line of Business'
+
+	column 'LOB Key'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: lob_key
+
+	column 'Line of Business'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: line_of_business
+
+	column 'Target Loss Ratio'
+		dataType: double
+		formatString: 0.0%
+		summarizeBy: none
+		sourceColumn: target_loss_ratio
+
+	partition 'Line of Business' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\dim_line_of_business.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"lob_key", type text}, {"line_of_business", type text}, {"target_loss_ratio", type number}}, "en-US")
+				in
+				    Typed
